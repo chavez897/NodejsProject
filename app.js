@@ -64,6 +64,24 @@ async function deleteRestaurantById(id) {
   }
 }
 
+async function addNewRestaurant(data) {
+  try{
+    const restaurant = await Restaurant.create(data)
+    return restaurant
+  }catch(err){
+    console.log(err)
+  }
+}
+
+async function updateRestaurantById(data, id) {
+  try{
+    const restaurant = await Restaurant.findOneAndUpdate({_id: id}, data)
+    return restaurant
+  }catch(err){
+    console.log(err)
+  }
+}
+
 app.get("/api/restaurants", function (req, res) {
   let page = req.query.page;
   let perPage = req.query.perPage;
@@ -88,6 +106,29 @@ app.delete("/api/restaurants/id=:id", (req, res) => {
     .catch((err) => {
       console.log(err);
     });
+});
+
+app.post("/api/restaurants", function (req, res) {
+  let data = req.body
+  addNewRestaurant(data)
+  .then((data) => {
+    res.json(data);
+  })
+  .catch((err) => {
+    res.send(err)
+  })
+});
+
+app.put("/api/restaurants/:id", function (req, res) {
+  let data = req.body
+  let id = req.params.id;
+  updateRestaurantById(data, id)
+  .then((data) => {
+    res.json(data);
+  })
+  .catch((err) => {
+    res.send(err)
+  })
 });
 
 app.listen(port);
