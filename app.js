@@ -75,8 +75,9 @@ async function addNewRestaurant(data) {
 
 async function updateRestaurantById(data, id) {
   try{
-    const restaurant = await Restaurant.findOneAndUpdate({_id: id}, data)
-    return restaurant
+    await Restaurant.findOneAndUpdate({_id: id}, data)
+    const update = await Restaurant.findById(id)
+    return update
   }catch(err){
     console.log(err)
   }
