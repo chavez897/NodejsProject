@@ -21,7 +21,7 @@ async function addNewRestaurant(data) {
       const restaurant = await Restaurant.create(data)
       return restaurant
     }catch(err){
-      console.log(err)
+      res.status(500).json({'msg':'Unable to create a new record'});
     }
   }
   
@@ -57,7 +57,7 @@ async function addNewRestaurant(data) {
         }
       }
     } catch (err) {
-      console.log(err);
+      res.status(500).json({'msg':'Unable to find records'});
     }
   }
   
@@ -67,7 +67,7 @@ async function addNewRestaurant(data) {
       const restaurant=await Restaurant.find({_id:id})
       return restaurant
     }catch(err){
-      console.log(err)
+      res.status(500).json({'msg':'Unable to find record'});
     }
   }
   
@@ -78,17 +78,17 @@ async function addNewRestaurant(data) {
       const update = await Restaurant.findById(id)
       return update
     }catch(err){
-      console.log(err)
+      res.status(500).json({'msg':'Unable to update record'});
     }
   }
   
   // Delete Restaurant Record By Id
-  async function deleteRestaurantById(id) {
+  async function deleteRestaurantById(id,req,res) {
     try{
       const restaurant=await Restaurant.deleteOne({id});
       return `${restaurant.name} restaurant has been deleted successfully`
     }catch(err){
-      console.log(err)
+      res.status(500).json({'msg':'Unable to delete record'});
     }
   }
 

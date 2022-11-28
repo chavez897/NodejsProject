@@ -11,9 +11,7 @@ const restaurantSchema = mongoose.Schema({
   cuisine: String,
   grades: [
     {
-      date: {
-        type: Date,
-      },
+      date: Date,
       grade: String,
       score: Number,
     },
