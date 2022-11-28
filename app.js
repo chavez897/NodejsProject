@@ -14,7 +14,6 @@ app.use(bodyParser.json({ type: "application/vnd.api+json" })); // parse applica
 const HBS = exphbs.create({
   helpers: {
     dateFormat: function (date) {
-      console.log(date)
       return date.toISOString().split('T')[0]
     },
   },
