@@ -4,6 +4,7 @@ const database = require("./config/database");
 const db = require("./models/db");
 const bodyParser = require("body-parser"); // pull information from HTML POST (express4)
 const exphbs = require("express-handlebars");
+const { check, param, validationResult } = require('express-validator');
 
 const port = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
@@ -40,14 +41,22 @@ app.get("/api/restaurants", function (req, res) {
 });
 
 // Get Record By id
-app.get("/api/restaurants/:id",((req,res)=>{
-  let id=req.params.id;
-  db.getRestaurantById(id)
-  .then((data)=>{
-    res.json(data);
-  }).catch((err)=>{
-    console.log(err);
-  })
+app.get("/api/restaurants/:id",
+  check('id').exists().isString().notEmpty()
+,((req,res)=>{
+  const errors= validationResult(req)
+  console.log(errors)
+  if(!errors.isEmpty()){
+    return res.status(400).json({ errors: errors.array() });
+  }else{
+    let id=req.params.id;
+    db.getRestaurantById(id)
+    .then((data)=>{
+      res.json(data);
+    }).catch((err)=>{
+      console.log(err);
+    })
+  }
 }))
 
 // Add a New Record
