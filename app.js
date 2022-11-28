@@ -12,7 +12,12 @@ app.use(bodyParser.json({ type: "application/vnd.api+json" })); // parse applica
 
 // Set up Handlebars as the template engine
 const HBS = exphbs.create({
-  helpers: {},
+  helpers: {
+    dateFormat: function (date) {
+      console.log(date)
+      return date.toISOString().split('T')[0]
+    },
+  },
   extname: "hbs"
 });
 app.engine(".hbs", HBS.engine);
@@ -85,14 +90,14 @@ app.delete("/api/restaurants/:id", (req, res) => {
 
 //get all employee data from db
 app.get("/api/results", function (req, res) {
-  let page = req.query.page;
-  let perPage = req.query.perPage;
-  let borough = req.query.borough;
+  let page = req.query.page === '' ? 1 : req.query.page;
+  let perPage = req.query.perPage === '' ? 10 : req.query.perPage;
+  let borough = req.query.borough === '' ? undefined : req.query.borough;
 
-  getAllRestaurants(page, perPage, borough)
+  db.getAllRestaurants(page, perPage, borough)
     .then((data) => {
       res.render("restaurantsTable", {
-        title: "Data",
+        title: "Restaurants",
         restaurants: data
       });
     })

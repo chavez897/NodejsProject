@@ -32,7 +32,8 @@ async function addNewRestaurant(data) {
         const restaurants = await Restaurant.find()
           .sort({ restaurant_id: 1 })
           .limit(perPage)
-          .skip((page - 1) * perPage);
+          .skip((page - 1) * perPage)
+          .lean();
   
         // If no matching records found
         if (restaurants.length == 0) {
@@ -44,7 +45,8 @@ async function addNewRestaurant(data) {
         const restaurants = await Restaurant.find({ borough: borough })
           .sort({ restaurant_id: 1 })
           .limit(perPage)
-          .skip((page - 1) * perPage);
+          .skip((page - 1) * perPage)
+          .lean();
   
         // If no matching records found
         if (restaurants.length == 0) {

@@ -1,4 +1,7 @@
 <div class="mx-3 mt-5">
+  <div class="mb-3 w-100 mx-auto text-center">
+  <h1>Restaurants</h1>
+  </div>
 <table class="table table-striped">
   <thead>
     <tr>
@@ -20,8 +23,9 @@
       <td>{{this.address.building}} {{this.address.street}}, {{this.address.zipcode}}</td>
       <td>
         <ul>
-          <li>2022-12-25, A, 10</li>
-          <li>2022-12-25, B, 8</li>
+          {{#each this.grades}}
+            <li>{{dateFormat this.date}}, {{this.grade}}, {{this.score}}</li>
+          {{/each}}
         </ul>
       </td>
     </tr> 
