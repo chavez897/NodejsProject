@@ -1,0 +1,31 @@
+<div class="mx-3 mt-5">
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">id</th>
+      <th scope="col">Name</th>
+      <th scope="col">Cousine</th>
+      <th scope="col">Borough</th>
+      <th scope="col">Address</th>
+      <th scope="col">Grades</th>
+    </tr>
+  </thead>
+  <tbody>
+      {{#each restaurants}}
+    <tr>
+      <th scope="row">{{this.restaurant_id}}</th>
+      <td>{{this.name}}</td>
+      <td>{{this.cuisine}}</td>
+      <td>{{this.borough}}</td>
+      <td>{{this.address.building}} {{this.address.street}}, {{this.address.zipcode}}</td>
+      <td>
+        <ul>
+          <li>2022-12-25, A, 10</li>
+          <li>2022-12-25, B, 8</li>
+        </ul>
+      </td>
+    </tr> 
+    {{/each}}
+  </tbody>
+</table>
+</div>

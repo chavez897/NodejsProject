@@ -3,11 +3,20 @@ const mongoose = require("mongoose");
 const app = express();
 const database = require("./config/database");
 const bodyParser = require("body-parser"); // pull information from HTML POST (express4)
+const exphbs = require("express-handlebars");
 
 const port = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json()); // parse application/json
 app.use(bodyParser.json({ type: "application/vnd.api+json" })); // parse application/vnd.api+json as json
+
+// Set up Handlebars as the template engine
+const HBS = exphbs.create({
+  helpers: {},
+  extname: "hbs"
+});
+app.engine(".hbs", HBS.engine);
+app.set("view engine", ".hbs");
 
 // Connecting with DB
 mongoose
@@ -28,7 +37,8 @@ async function getAllRestaurants(page, perPage, borough) {
       const restaurants = await Restaurant.find()
         .sort({ restaurant_id: 1 })
         .limit(perPage)
-        .skip((page - 1) * perPage);
+        .skip((page - 1) * perPage)
+        .lean();
 
       // If no matching records found
       if (restaurants.length == 0) {
@@ -130,6 +140,24 @@ app.put("/api/restaurants/:id", function (req, res) {
   .catch((err) => {
     res.send(err)
   })
+});
+
+//get all employee data from db
+app.get("/api/results", function (req, res) {
+  let page = req.query.page;
+  let perPage = req.query.perPage;
+  let borough = req.query.borough;
+
+  getAllRestaurants(page, perPage, borough)
+    .then((data) => {
+      res.render("restaurantsTable", {
+        title: "Data",
+        restaurants: data
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 app.listen(port);
