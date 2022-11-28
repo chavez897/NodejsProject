@@ -5,8 +5,7 @@ const database = require("./config/database");
 const db = require("./models/db");
 const bodyParser = require("body-parser"); // pull information from HTML POST (express4)
 const exphbs = require("express-handlebars");
-const { check, validationResult } = require("express-validator");
-const restaurant = require("./models/restaurant");
+const { check, query, param, validationResult } = require("express-validator");
 
 const port = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
@@ -30,30 +29,51 @@ app.use(express.static(path.join(__dirname, "public")));
 db.initialize(database.url);
 
 // *! ROUTES
-app.get("/api/restaurants", function (req, res) {
-  let page = req.query.page;
-  let perPage = req.query.perPage;
-  let borough = req.query.borough;
-  db.getAllRestaurants(page, perPage, borough)
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
-
 // Get Record By id
-app.get("/api/restaurants/:id", (req, res) => {
-  let id = req.params.id;
-  db.getRestaurantById(id)
-    .then((data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      res.send(err);
-    });
-});
+app.get(
+  "/api/restaurants/:id",
+  [param("id").exists().isString()],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    } else {
+      let id = req.params.id;
+      db.getRestaurantById(id)
+        .then((data) => {
+          res.json(data);
+        })
+        .catch((err) => {
+          res.send(err);
+        });
+    }
+  }
+);
+
+app.get(
+  "/api/restaurants",
+  [
+    query("page").isNumeric({min:1}),
+    query("perPage").isNumeric({min:1}),
+    query("borough").optional().isString(),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    let page = req.query.page;
+    let perPage = req.query.perPage;
+    let borough = req.query.borough;
+    db.getAllRestaurants(page, perPage, borough)
+      .then((data) => {
+        res.json(data);
+      })
+      .catch((err) => {
+        res.send(err);
+      });
+  }
+);
 
 // Add a New Record
 app.post(
@@ -69,7 +89,7 @@ app.post(
     check("grades").exists().bail().isArray(),
     check("grades.*.date").exists().bail().isISO8601().toDate(),
     check("grades.*.grade").exists().bail().isString(),
-    check("grades.*.score").exists().bail().isNumeric(),
+    check("grades.*.score").exists().bail().isNumeric({min:0}),
     check("name").exists().bail().isString(),
     check("restaurant_id").exists().bail().isString(),
   ],
@@ -113,7 +133,7 @@ app.put(
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
-    }else{
+    } else {
       let data = req.body;
       let id = req.params.id;
       db.updateRestaurantById(data, id)

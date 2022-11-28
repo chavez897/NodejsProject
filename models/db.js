@@ -85,7 +85,7 @@ async function addNewRestaurant(data) {
   // Delete Restaurant Record By Id
   async function deleteRestaurantById(id,req,res) {
     try{
-      const restaurant=await Restaurant.deleteOne({id});
+      const restaurant=await Restaurant.deleteOne({_id:id});
       return `${restaurant.name} restaurant has been deleted successfully`
     }catch(err){
       res.status(500).json({'msg':'Unable to delete record'});
