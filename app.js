@@ -7,7 +7,7 @@ const bodyParser = require("body-parser"); // pull information from HTML POST (e
 const exphbs = require("express-handlebars");
 const { check, query, param, validationResult } = require("express-validator");
 
-const port = process.env.PORT || 8000;
+var HTTP_PORT = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json()); // parse application/json
 app.use(bodyParser.json({ type: "application/vnd.api+json" })); // parse application/vnd.api+json as json
@@ -185,5 +185,4 @@ app.get("*", (req, res) => {
   res.status(404).render("error", { layout: false });
 });
 
-app.listen(port);
-console.log("Listening on port : " + port);
+app.listen(HTTP_PORT);
