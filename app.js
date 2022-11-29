@@ -53,8 +53,8 @@ app.get(
 app.get(
   "/api/restaurants",
   [
-    query("page").isNumeric({min:1}),
-    query("perPage").isNumeric({min:1}),
+    query("page").isNumeric({ min: 1 }),
+    query("perPage").isNumeric({ min: 1 }),
     query("borough").optional().isString(),
   ],
   (req, res) => {
@@ -67,7 +67,11 @@ app.get(
     let borough = req.query.borough;
     db.getAllRestaurants(page, perPage, borough)
       .then((data) => {
-        res.json(data);
+        if (data.message) {
+          res.status(204).json(data);
+        } else {
+          res.json(data);
+        }
       })
       .catch((err) => {
         res.send(err);
@@ -89,7 +93,7 @@ app.post(
     check("grades").exists().bail().isArray(),
     check("grades.*.date").exists().bail().isISO8601().toDate(),
     check("grades.*.grade").exists().bail().isString(),
-    check("grades.*.score").exists().bail().isNumeric({min:0}),
+    check("grades.*.score").exists().bail().isNumeric({ min: 0 }),
     check("name").exists().bail().isString(),
     check("restaurant_id").exists().bail().isString(),
   ],
