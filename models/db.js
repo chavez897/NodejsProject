@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 // Initializing Model
 const Restaurant = require("./restaurant");
+const User = require("./user");
 
 // Connecting with Database
 function initialize(url){
@@ -92,4 +93,24 @@ async function addNewRestaurant(data) {
     }
   }
 
-  module.exports={initialize,addNewRestaurant,getAllRestaurants,getRestaurantById,updateRestaurantById,deleteRestaurantById}
+  // Register a new user
+  async function registerUser(data){
+    try{
+      const user=await User.create(data);
+      return user;
+    }catch(err){
+      res.status(500).json({'msg':'Unable to register user'});
+    }
+  }
+
+  // Get User(Login)
+  async function getUser(emailID,req,res){
+    try{
+      const user=await User.findOne({email:emailID});
+      return user;
+    }catch(err){
+      res.status(500).json({'msg':'Unable to login user'});
+    }
+  }
+
+  module.exports={initialize,addNewRestaurant,getAllRestaurants,getRestaurantById,updateRestaurantById,deleteRestaurantById,registerUser,getUser}

@@ -2,10 +2,11 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const database = require("./config/database");
-const db = require("./models/db");
 const bodyParser = require("body-parser"); // pull information from HTML POST (express4)
 const exphbs = require("express-handlebars");
+const bcrypt = require("bcryptjs");
 const { check, query, param, validationResult } = require("express-validator");
+const db = require("./models/db");
 
 var HTTP_PORT = process.env.PORT || 8000;
 app.use(bodyParser.urlencoded({ extended: "true" })); // parse application/x-www-form-urlencoded
@@ -28,7 +29,85 @@ app.use(express.static(path.join(__dirname, "public")));
 // Connecting with DB
 db.initialize(database.url);
 
+// Initializing User Model
+const User = require("./models/user");
+
 // *! ROUTES
+
+// Register a user
+app.post(
+  "/register",
+  [
+    check("name").exists().bail().isString(),
+    check("email").exists().bail().normalizeEmail().isEmail(),
+    check("password").exists().bail().isString(),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    } else {
+      let password = req.body.password;
+      let salt = 10;
+      // Hashing the password
+      bcrypt
+        .hash(password, salt)
+        .then((hash) => {
+          let data = {
+            name: req.body.name,
+            email: req.body.email,
+            password: hash,
+          };
+          db.registerUser(data)
+            .then((data) => {
+              res.status(201).json(data);
+            })
+            .catch((err) => {
+              res.send(err);
+            });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }
+);
+
+// Login User
+app.post(
+  "/login",
+  [check("email").exists().bail().normalizeEmail().isEmail()],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    } else {
+      let email = req.body.email;
+      let password=req.body.password;
+
+      db.getUser(email, req, res)
+        .then((data) => {
+          // Checking if user email matches in DB
+          if (data.email === email) {
+            // Checking if the pasword is correct
+            bcrypt.compare(password,data.password).then((result)=>{
+              if(result==true){
+                res.json({'msg':'Login Successful'})
+              }else{
+                res.json({'msg':'Invalid Credentials'})
+              }
+            })
+          } else {
+            res.json({ 'msg': "Unable to find email" });
+          }
+        })
+        .catch((err) => {
+          res.send(err);
+        });
+    }
+  }
+);
+
 // Get Record By id
 app.get(
   "/api/restaurants/:id",
