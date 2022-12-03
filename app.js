@@ -5,6 +5,7 @@ const database = require("./config/database");
 const bodyParser = require("body-parser"); // pull information from HTML POST (express4)
 const exphbs = require("express-handlebars");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const { check, query, param, validationResult } = require("express-validator");
 const db = require("./models/db");
 
@@ -31,6 +32,19 @@ db.initialize(database.url);
 
 // Initializing User Model
 const User = require("./models/user");
+
+// Middleware validate JWT
+const validateJWT = function (req, res, next) {
+  const token = req.header('authorization')?.split(" ").length == 2 ? req.header('authorization').split(" ")[1] : "";
+  jwt.verify(token, process.env.SECRET, function (err, decoded) {
+    if (err) {
+      res.json(err)
+    } else {
+      req.userEmail = decoded.email
+      next();
+    }
+  });
+};
 
 // *! ROUTES
 
@@ -76,7 +90,7 @@ app.post(
 // Login User
 app.post(
   "/login",
-  [check("email").exists().bail().normalizeEmail().isEmail()],
+  [check("email").exists().bail().normalizeEmail().isEmail(), check("password").bail().isString(),],
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -87,12 +101,15 @@ app.post(
 
       db.getUser(email, req, res)
         .then((data) => {
-          // Checking if user email matches in DB
-          if (data.email === email) {
+          if (data === null) {
+            res.json({ 'msg': "Unable to find email" });
+          } else if(data.email === email) { // Checking if user email matches in DB
             // Checking if the pasword is correct
             bcrypt.compare(password,data.password).then((result)=>{
               if(result==true){
-                res.json({'msg':'Login Successful'})
+                const user = { email: data.email };
+                const accessToken = jwt.sign(user, process.env.SECRET);
+                res.json({ accessToken: accessToken });
               }else{
                 res.json({'msg':'Invalid Credentials'})
               }
@@ -162,6 +179,7 @@ app.get(
 app.post(
   "/api/restaurants",
   [
+    validateJWT,
     check("address").exists().bail().isObject(),
     check("address.building").exists().bail().isString(),
     check("address.coord").exists().bail().isArray(),
@@ -198,6 +216,7 @@ app.post(
 app.put(
   "/api/restaurants/:id",
   [
+    validateJWT,
     check("address").isObject(),
     check("address.building").isString(),
     check("address.coord").isArray(),
@@ -231,7 +250,7 @@ app.put(
 );
 
 // Delete a record
-app.delete("/api/restaurants/:id", (req, res) => {
+app.delete("/api/restaurants/:id", [validateJWT], (req, res) => {
   let id = req.params.id;
   db.deleteRestaurantById(id, req, res)
     .then((data) => {
@@ -244,9 +263,9 @@ app.delete("/api/restaurants/:id", (req, res) => {
 
 //get all employee data from db
 app.get("/api/results", function (req, res) {
-  let page = req.query.page === "" ? 1 : req.query.page;
-  let perPage = req.query.perPage === "" ? 10 : req.query.perPage;
-  let borough = req.query.borough === "" ? undefined : req.query.borough;
+  let page = req.query.page === "" || req.query.page === undefined || req.query.page === null ? 1 : req.query.page;
+  let perPage = req.query.perPage === "" || req.query.perPage === undefined || req.query.perPage === null  ? 10 : req.query.perPage;
+  let borough = req.query.borough === "" || req.query.borough === undefined || req.query.borough === null  ? undefined : req.query.borough;
 
   db.getAllRestaurants(page, perPage, borough)
     .then((data) => {
