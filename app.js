@@ -35,12 +35,15 @@ const User = require("./models/user");
 
 // Middleware validate JWT
 const validateJWT = function (req, res, next) {
-  const token = req.header('authorization')?.split(" ").length == 2 ? req.header('authorization').split(" ")[1] : "";
+  const token =
+    req.header("authorization")?.split(" ").length == 2
+      ? req.header("authorization").split(" ")[1]
+      : "";
   jwt.verify(token, process.env.SECRET, function (err, decoded) {
     if (err) {
-      res.json(err)
+      res.json(err);
     } else {
-      req.userEmail = decoded.email
+      req.userEmail = decoded.email;
       next();
     }
   });
@@ -90,32 +93,36 @@ app.post(
 // Login User
 app.post(
   "/login",
-  [check("email").exists().bail().normalizeEmail().isEmail(), check("password").bail().isString(),],
+  [
+    check("email").exists().bail().normalizeEmail().isEmail(),
+    check("password").bail().isString(),
+  ],
   (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     } else {
       let email = req.body.email;
-      let password=req.body.password;
+      let password = req.body.password;
 
       db.getUser(email, req, res)
         .then((data) => {
           if (data === null) {
-            res.json({ 'msg': "Unable to find email" });
-          } else if(data.email === email) { // Checking if user email matches in DB
+            res.json({ msg: "Unable to find email" });
+          } else if (data.email === email) {
+            // Checking if user email matches in DB
             // Checking if the pasword is correct
-            bcrypt.compare(password,data.password).then((result)=>{
-              if(result==true){
+            bcrypt.compare(password, data.password).then((result) => {
+              if (result == true) {
                 const user = { email: data.email };
                 const accessToken = jwt.sign(user, process.env.SECRET);
                 res.json({ accessToken: accessToken });
-              }else{
-                res.json({'msg':'Invalid Credentials'})
+              } else {
+                res.json({ msg: "Invalid Credentials" });
               }
-            })
+            });
           } else {
-            res.json({ 'msg': "Unable to find email" });
+            res.json({ msg: "Unable to find email" });
           }
         })
         .catch((err) => {
@@ -157,21 +164,23 @@ app.get(
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
+    }else{
+      validateJWT(req,res)
+      let page = req.query.page;
+      let perPage = req.query.perPage;
+      let borough = req.query.borough;
+      db.getAllRestaurants(page, perPage, borough)
+        .then((data) => {
+          if (data.message) {
+            res.status(204).json(data);
+          } else {
+            res.json(data);
+          }
+        })
+        .catch((err) => {
+          res.send(err);
+        });
     }
-    let page = req.query.page;
-    let perPage = req.query.perPage;
-    let borough = req.query.borough;
-    db.getAllRestaurants(page, perPage, borough)
-      .then((data) => {
-        if (data.message) {
-          res.status(204).json(data);
-        } else {
-          res.json(data);
-        }
-      })
-      .catch((err) => {
-        res.send(err);
-      });
   }
 );
 
@@ -217,19 +226,19 @@ app.put(
   "/api/restaurants/:id",
   [
     validateJWT,
-    check("address").isObject(),
-    check("address.building").isString(),
-    check("address.coord").isArray(),
-    check("address.street").isString(),
-    check("address.zipcode").isString(),
-    check("borough").isString(),
-    check("cuisine").isString(),
-    check("grades").isArray(),
-    check("grades.*.date").isISO8601().toDate(),
-    check("grades.*.grade").isString(),
-    check("grades.*.score").isNumeric(),
-    check("name").isString(),
-    check("restaurant_id").isString(),
+    check("address").optional({ checkFalsy: true }).isObject(),
+    check("address.building").optional({ checkFalsy: true }).isString(),
+    check("address.coord").optional({ checkFalsy: true }).isArray(),
+    check("address.street").optional({ checkFalsy: true }).isString(),
+    check("address.zipcode").optional({ checkFalsy: true }).isString(),
+    check("borough").optional({ checkFalsy: true }).isString(),
+    check("cuisine").optional({ checkFalsy: true }).isString(),
+    check("grades").optional({ checkFalsy: true }).isArray(),
+    check("grades.*.date").optional({ checkFalsy: true }).isISO8601().toDate(),
+    check("grades.*.grade").optional({ checkFalsy: true }).isString(),
+    check("grades.*.score").optional({ checkFalsy: true }).isNumeric(),
+    check("name").optional({ checkFalsy: true }).isString(),
+    check("restaurant_id").optional({ checkFalsy: true }).isString(),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -263,9 +272,24 @@ app.delete("/api/restaurants/:id", [validateJWT], (req, res) => {
 
 //get all employee data from db
 app.get("/api/results", function (req, res) {
-  let page = req.query.page === "" || req.query.page === undefined || req.query.page === null ? 1 : req.query.page;
-  let perPage = req.query.perPage === "" || req.query.perPage === undefined || req.query.perPage === null  ? 10 : req.query.perPage;
-  let borough = req.query.borough === "" || req.query.borough === undefined || req.query.borough === null  ? undefined : req.query.borough;
+  let page =
+    req.query.page === "" ||
+    req.query.page === undefined ||
+    req.query.page === null
+      ? 1
+      : req.query.page;
+  let perPage =
+    req.query.perPage === "" ||
+    req.query.perPage === undefined ||
+    req.query.perPage === null
+      ? 10
+      : req.query.perPage;
+  let borough =
+    req.query.borough === "" ||
+    req.query.borough === undefined ||
+    req.query.borough === null
+      ? undefined
+      : req.query.borough;
 
   db.getAllRestaurants(page, perPage, borough)
     .then((data) => {
