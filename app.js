@@ -164,8 +164,7 @@ app.get(
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
-    }else{
-      validateJWT(req,res)
+    } else {
       let page = req.query.page;
       let perPage = req.query.perPage;
       let borough = req.query.borough;
